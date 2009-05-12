@@ -110,7 +110,11 @@ class YouTubeG
                                :average => rating_element.attributes["average"].to_f)
           end
 
-          params[:view_count] = (el = entry.elements["yt:statistics"]) ? el.attributes["viewCount"].to_i : 0
+          if (el = entry.elements["yt:statistics"])
+            params[:view_count], params[:favorite_count] = el.attributes["viewCount"].to_i, el.attributes["favoriteCount"].to_i
+          else
+            params[:view_count], params[:favorite_count] = 0,0
+          end
 
           params[:noembed] = entry.elements["yt:noembed"] ? true : false
           params[:racy] = entry.elements["media:rating"] ? true : false
