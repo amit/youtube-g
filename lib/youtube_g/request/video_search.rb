@@ -33,6 +33,7 @@ class YouTubeG
         @url << categories_to_params(params.delete(:categories)) if params[:categories]
         @url << tags_to_params(params.delete(:tags)) if params[:tags]
         @url << developer_tags_to_params(params.delete(:developer_tags)) if params[:developer_tags]
+        @url = @orig_base << playlist_to_params(params.delete(:playlist)) if params[:playlist]
 
         set_instance_variables(params)
         
@@ -46,6 +47,7 @@ class YouTubeG
       private
       
       def base_url
+        @orig_base=super
         super << "videos"
       end
       
@@ -62,6 +64,11 @@ class YouTubeG
         }
       end
 
+      # Convert playlist id to URL
+      def playlist_to_params(playlist)
+        "playlists/#{playlist}"
+      end
+      
       # Convert category symbols into strings and build the URL. GData requires categories to be capitalized. 
       # Categories defined like: categories => { :include => [:news], :exclude => [:sports], :either => [..] }
       # or like: categories => [:news, :sports]

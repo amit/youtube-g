@@ -27,7 +27,9 @@ class YouTubeG
 
         if entry
           params[:video_id] = entry.elements["id"].text
-          params[:published_at] = Time.parse(entry.elements["published"].text)
+          if entry.elements["published"]
+            params[:published_at] = Time.parse(entry.elements["published"].text)
+          end
           params[:updated_at] = Time.parse(entry.elements["updated"].text)
 
           # parse the category and keyword lists
