@@ -12,10 +12,15 @@ class YouTubeG
         if params == :favorites
           @url << "#{options[:user]}/favorites" 
           set_instance_variables(options)
+        elsif params == :playlists
+          @url << "#{options[:user]}/playlists" 
+          set_instance_variables(options)
         elsif params[:user] && options[:favorites]
           @url << "#{params[:user]}/favorites"
           set_instance_variables(params)
-          break
+        elsif params[:user] && options[:playlists]
+          @url << "#{params[:user]}/playlists"
+          set_instance_variables(params)
         elsif params[:user]
           @url << "#{params[:user]}/uploads"
           set_instance_variables(params)
@@ -26,11 +31,11 @@ class YouTubeG
 
       private
 
-      def base_url
+      def base_url #:nodoc:
         super << "users/"
       end
 
-      def to_youtube_params
+      def to_youtube_params #:nodoc:
         {
           'max-results' => @max_results,
           'orderby' => @order_by,

@@ -66,12 +66,13 @@ class YouTubeG
                               :uri => author_element.elements["uri"].text)
           end
       
+          media_content = []
+          thumbnails = []
           media_group = entry.elements["media:group"]
           if media_group
             params[:description] = media_group.elements["media:description"].text
             params[:duration] = media_group.elements["yt:duration"].attributes["seconds"].to_i
 
-            media_content = []
             media_group.elements.each("media:content") do |mce|
               media_content << parse_media_content(mce)
             end
@@ -79,6 +80,16 @@ class YouTubeG
 
             player = media_group.elements["media:player"]
             params[:player_url] = player.attributes["url"] if player
+          
+            # parse thumbnails
+            media_group.elements.each("media:thumbnail") do |thumb_element|
+              # TODO: convert time HH:MM:ss string to seconds?
+              thumbnails << YouTubeG::Model::Thumbnail.new(
+                              :url => thumb_element.attributes["url"],
+                              :height => thumb_element.attributes["height"].to_i,
+                              :width => thumb_element.attributes["width"].to_i,
+                              :time => thumb_element.attributes["time"])
+            end
           end
           
           control = entry.elements["app:control"] 
@@ -88,16 +99,6 @@ class YouTubeG
                               :reason => state.attributes["reasonCode"],
                               :help_url => state.attributes["helpUrl"]) if state
 
-          # parse thumbnails
-          thumbnails = []
-          media_group.elements.each("media:thumbnail") do |thumb_element|
-            # TODO: convert time HH:MM:ss string to seconds?
-            thumbnails << YouTubeG::Model::Thumbnail.new(
-                            :url => thumb_element.attributes["url"],
-                            :height => thumb_element.attributes["height"].to_i,
-                            :width => thumb_element.attributes["width"].to_i,
-                            :time => thumb_element.attributes["time"])
-          end
           params[:thumbnails] = thumbnails
 
           rating_element = entry.elements["gd:rating"]

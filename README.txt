@@ -43,6 +43,7 @@ Basic queries:
   client.videos_by(:categories => [:news, :sports])
   client.videos_by(:categories => [:news, :sports], :tags => ['soccer', 'football'])
   client.videos_by(:user => 'liz')
+  client.videos_by(:playlists, :user => 'liz')
   client.videos_by(:favorites, :user => 'liz')
   client.videos_by(:developer_tags => [:app, :user], :headers => {"X-GData-Key" => "key=<developer_key>"})
   * developer_tags must be associated with a valid developer_key
