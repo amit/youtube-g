@@ -58,7 +58,9 @@ class YouTubeG
           params[:developer_tags] = developer_tags
 
           params[:title] = entry.elements["title"].text
-          params[:html_content] = entry.elements["content"].text
+          if entry.elements["content"]
+            params[:html_content] = entry.elements["content"].text
+          end
 
           # parse the author
           author_element = entry.elements["author"]
@@ -72,8 +74,12 @@ class YouTubeG
           thumbnails = []
           media_group = entry.elements["media:group"]
           if media_group
-            params[:description] = media_group.elements["media:description"].text
-            params[:duration] = media_group.elements["yt:duration"].attributes["seconds"].to_i
+            if media_group.elements["media:description"]
+              params[:description] = media_group.elements["media:description"].text
+            end
+            if media_group.elements["yt:duration"]
+              params[:duration] = media_group.elements["yt:duration"].attributes["seconds"].to_i
+            end
 
             media_group.elements.each("media:content") do |mce|
               media_content << parse_media_content(mce)
