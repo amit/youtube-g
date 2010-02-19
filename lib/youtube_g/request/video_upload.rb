@@ -113,11 +113,13 @@ class YouTubeG
           "Content-Length" => "0",
         })
         
-        delete_url = 'http://%s/feeds/api/users/%s/uploads/%s' % [base_url, init_options[:user], video_id]
-
-        response = YouTubeG.transport.send_req(request_options.merge({:method => 'delete', :url => delete_url, :headers => delete_header}))
-        raise_on_faulty_response(response)
-        true
+        delete_url = "/feeds/api/users/#{@user}/uploads/#{video_id}"
+        
+        Net::HTTP.start(base_url) do |session|
+          response = session.delete(delete_url, delete_header)
+          raise_on_faulty_response(response)
+          return true
+        end
       end
       
       #private
@@ -156,7 +158,7 @@ class YouTubeG
       def raise_on_faulty_response(response)
         if [401,403].include? response.status.to_i
           raise AuthenticationError, response.body[/<TITLE>(.+)<\/TITLE>/, 1]
-        elsif ![200, 201].include? response.status.to_i
+        elsif response.code.to_i / 10 != 20 # Response in 20x means success
           raise UploadError, parse_upload_error_from(response.body)
         end 
       end
@@ -182,19 +184,15 @@ class YouTubeG
       
       # TODO: isn't there a cleaner way to output top-notch XML without requiring stuff all over the place?
       def video_xml
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct! :xml, :version => '1.0', :encoding => nil
-        xml.entry :xmlns => 'http://www.w3.org/2005/Atom',
-          'xmlns:media' => 'http://search.yahoo.com/mrss/',
-          'xmlns:yt' => 'http://gdata.youtube.com/schemas/2007' do
-          xml.media :group do
-            xml.media :title,       @opts[:title],        :type => 'plain'
-            xml.media :description, @opts[:description],  :type => 'plain'
-            xml.media :category,    @opts[:category],     :scheme => 'http://gdata.youtube.com/schemas/2007/categories.cat'
-            @opts[:developer_tags].each do |developer_tag|
-              xml.media :category,  developer_tag,        :scheme => 'http://gdata.youtube.com/schemas/2007/developertags.cat'
-            end
-            xml.tag! 'media:keywords', @opts[:keywords].join(",")
+        b = Builder::XmlMarkup.new
+        b.instruct!
+        b.entry(:xmlns => "http://www.w3.org/2005/Atom", 'xmlns:media' => "http://search.yahoo.com/mrss/", 'xmlns:yt' => "http://gdata.youtube.com/schemas/2007") do | m |
+          m.tag!("media:group") do | mg |
+            mg.tag!("media:title", @opts[:title], :type => "plain")
+            mg.tag!("media:description", @opts[:description], :type => "plain")
+            mg.tag!("media:keywords", @opts[:keywords].join(","))
+            mg.tag!('media:category', @opts[:category], :scheme => "http://gdata.youtube.com/schemas/2007/categories.cat")
+            mg.tag!('yt:private') if @opts[:private]
           end
         end
         xml.target!
